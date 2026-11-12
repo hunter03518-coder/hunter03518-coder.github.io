@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hunter's Code Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      :root {
+        --x-blue: #5272cd;
+        --x-blue-deep: #3f5fbb;
+        --x-mono: "Geist Mono", ui-monospace, Menlo, monospace;
+        --x-line: 24px;
+      }
+      .x-app { display: grid; gap: 12px; min-width: 0; }
+      .x-bar {
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+        gap: 12px; padding-top: 8px;
+      }
+      .x-title { margin: 0; font: var(--type-heading); color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+      .x-title b { width: 12px; height: 12px; border-radius: var(--r-pill); background: var(--x-blue); flex: none; }
+      .x-tabs {
+        display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--r-pill);
+        background: var(--fill-tertiary); border: 1px solid var(--stroke-secondary);
+      }
+      .x-tab {
+        appearance: none; border: 0; background: transparent; cursor: pointer;
+        min-height: var(--tap); padding: 0 16px; border-radius: var(--r-pill);
+        font: var(--type-label); color: var(--text-secondary);
+        transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out);
+      }
+      .x-tab[aria-selected="true"] { background: var(--fill-primary-on); color: var(--text-primary); box-shadow: 0 1px 4px var(--stroke-primary); }
+      .x-tab:focus-visible, .x-btn:focus-visible { outline: 2px solid var(--x-blue); outline-offset: 2px; }
+      .x-note { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-note strong { color: var(--text-primary); font-weight: var(--weight-medium); }
+
+      .x-work { display: grid; gap: 12px; min-width: 0; }
+      .x-pane { display: grid; gap: 12px; min-width: 0; align-content: start; }
+      .x-label {
+        margin: 0; font: var(--type-tag); color: var(--text-secondary);
+        text-transform: uppercase; letter-spacing: 0.06em;
+      }
+      .x-editor {
+        position: relative; display: flex; min-width: 0; height: 52vh; min-height: 300px;
+        border: 1px solid var(--stroke-primary); border-radius: var(--r-m);
+        background: var(--fill-primary-on); overflow: hidden;
+      }
+      .x-editor:focus-within { border-color: var(--x-blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--x-blue) 22%, transparent); }
+      .x-gutter {
+        flex: none; min-width: 40px; padding: 12px 8px 12px 10px; margin: 0;
+        background: var(--fill-tertiary); border-right: 1px solid var(--stroke-secondary);
+        font: 400 14px/var(--x-line) var(--x-mono); color: var(--text-secondary);
+        text-align: right; overflow: hidden; white-space: pre; user-select: none;
+      }
+      .x-gutter span.is-bad { color: var(--fill-system-red); font-weight: var(--weight-bold); }
+      .x-code {
+        flex: 1; min-width: 0; margin: 0; border: 0; outline: 0; resize: none;
+        padding: 12px; background: transparent; color: var(--text-primary);
+        font: 400 16px/var(--x-line) var(--x-mono); tab-size: 2; -moz-tab-size: 2;
+        white-space: pre; overflow: auto; -webkit-overflow-scrolling: touch;
+        caret-color: var(--x-blue);
+      }
+
+      .x-actions { display: flex; gap: 8px; }
+      .x-btn {
+        appearance: none; cursor: pointer; min-height: 48px; padding: 0 18px;
+        border-radius: var(--r-pill); border: 1px solid var(--stroke-primary);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-body-strong);
+        transition: background var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+        -webkit-tap-highlight-color: transparent;
+      }
+      .x-btn:hover { background: var(--fill-tertiary); }
+      .x-btn:active { transform: scale(0.97); }
+      .x-run {
+        flex: 1; background: var(--x-blue-deep); border-color: var(--x-blue-deep); color: #fff;
+        font-size: 18px; font-weight: var(--weight-bold);
+      }
+      .x-run:hover { background: var(--x-blue); }
+
+      .x-out-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .x-status { font: var(--type-caption); color: var(--text-secondary); }
+      .x-frame {
+        display: block; width: 100%; height: 320px; border: 1px solid var(--stroke-primary);
+        border-radius: var(--r-m); background: #fff;
+      }
+      .x-console {
+        margin: 0; min-height: 200px; max-height: 60vh; overflow: auto; padding: 14px 16px;
+        border-radius: var(--r-m); background: var(--hero-surface); color: var(--hero-text);
+        font: 400 15px/1.5 var(--x-mono); white-space: pre-wrap; word-break: break-word;
+      }
+      .x-console .x-dim { color: var(--hero-text-muted); }
+      .x-console .x-err {
+        display: block; margin-top: 8px; padding: 10px 12px; border-radius: var(--r-s);
+        background: rgb(218 47 53 / 0.22); border: 1px solid rgb(241 85 91 / 0.6); color: #ffb3b6;
+        font-family: var(--sans);
+      }
+      .x-console .x-err b { color: #fff; }
+      [hidden] { display: none !important; }
+
+      @media (min-width: 900px) {
+        .x-work { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+        .x-editor { height: 62vh; }
+        .x-frame { height: calc(62vh + 60px); }
+        .x-console { min-height: calc(62vh + 60px); max-height: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-app">
+          <header class="x-bar">
+            <h1 class="x-title"><b aria-hidden="true"></b>Hunter's Code Lab</h1>
+            <div class="x-tabs" role="tablist" aria-label="Language">
+              <button class="x-tab" role="tab" id="tab-html" data-mode="html" aria-selected="true">HTML</button>
+              <button class="x-tab" role="tab" id="tab-py" data-mode="py" aria-selected="false">Python (mini)</button>
+            </div>
+          </header>
+          <p class="x-note" id="py-note" hidden>
+            <strong>mini Python:</strong> supports print, variables, math, and simple if/for loops
+          </p>
+
+          <div class="x-work">
+            <div class="x-pane">
+              <p class="x-label" id="code-label">Your code</p>
+              <div class="x-editor">
+                <pre class="x-gutter" id="gutter" aria-hidden="true"></pre>
+                <textarea
+                  class="x-code"
+                  id="code"
+                  aria-labelledby="code-label"
+                  wrap="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  autocomplete="off"
+                  spellcheck="false"
+                ></textarea>
+              </div>
+              <div class="x-actions">
+                <button class="x-btn x-run" id="run" type="button">▶ Run</button>
+                <button class="x-btn" id="clear" type="button">Clear</button>
+                <button class="x-btn" id="example" type="button">Example</button>
+              </div>
+            </div>
+
+            <div class="x-pane" id="output-pane">
+              <div class="x-out-head">
+                <p class="x-label">Output</p>
+                <span class="x-status" id="status" aria-live="polite">Tap Run to see it</span>
+              </div>
+              <iframe class="x-frame" id="frame" title="HTML output" sandbox="allow-scripts allow-modals"></iframe>
+              <pre class="x-console" id="console" role="log" aria-label="Python output" hidden><span class="x-dim">Tap ▶ Run and your prints show up here.</span></pre>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer class="foot">
+        <p>Made with Hark</p>
+      </footer>
+    </div>
+    <script src="hark.js"></script>
+    <script src="mini-python.js"></script>
+    <script>
+      (function () {
+        var EXAMPLES = {
+          html: [
+            '<!DOCTYPE html>\n<html>\n  <body>\n    <p>hi</p>\n  </body>\n</html>',
+            '<!DOCTYPE html>\n<html>\n  <body>\n    <h1 style="color: #5272CD; font-size: 40px;">Hunter\'s Smoothies</h1>\n    <ul>\n      <li>Fly Smoothie</li>\n      <li>Golden Coin</li>\n      <li>The Hark Specialty</li>\n      <li>Triple Razz Galaxy</li>\n    </ul>\n  </body>\n</html>',
+            '<!DOCTYPE html>\n<html>\n  <body>\n    <button onclick="alert(\'Ribbit!\')" style="font-size: 24px; padding: 12px 24px;">Ribbit!</button>\n  </body>\n</html>'
+          ],
+          py: [
+            '# Say hi!\nprint("hi")\nname = "Hunter"\nprint("Hello", name)\nfor i in range(3):\n    print("Ribbit", i + 1)',
+            '# Countdown to launch!\nfor i in range(5):\n    print(5 - i)\nprint("Blast off!")',
+            '# The 7 times table\nfor i in range(1, 11):\n    print("7 x", i, "=", 7 * i)'
+          ]
+        };
+        var code = { html: EXAMPLES.html[0], py: EXAMPLES.py[0] };
+        var exampleAt = { html: 1, py: 1 };
+        var mode = "html";
+
+        var ta = document.getElementById("code");
+        var gutter = document.getElementById("gutter");
+        var frame = document.getElementById("frame");
+        var cons = document.getElementById("console");
+        var status = document.getElementById("status");
+        var note = document.getElementById("py-note");
+        var tabs = document.querySelectorAll(".x-tab");
+        var badLine = 0;
+
+        function renderGutter() {
+          var n = ta.value.split("\n").length;
+          var html = "";
+          for (var i = 1; i <= n; i++) html += (i === badLine ? '<span class="is-bad">' + i + "</span>" : i) + (i < n ? "\n" : "");
+          gutter.innerHTML = html + "\n\n";
+          gutter.scrollTop = ta.scrollTop;
+        }
+        ta.addEventListener("input", function () { code[mode] = ta.value; if (badLine) badLine = 0; renderGutter(); });
+        ta.addEventListener("scroll", function () { gutter.scrollTop = ta.scrollTop; });
+
+        function insert(text) {
+          ta.focus();
+          var ok = false;
+          try { ok = document.execCommand("insertText", false, text); } catch (e) {}
+          if (!ok) {
+            ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, "end");
+            ta.dispatchEvent(new Event("input"));
+          }
+        }
+        ta.addEventListener("keydown", function (e) {
+          if (e.key === "Tab" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+            e.preventDefault();
+            insert("  ");
+          } else if (e.key === "Enter" && !e.isComposing) {
+            var before = ta.value.slice(0, ta.selectionStart);
+            var line = before.slice(before.lastIndexOf("\n") + 1);
+            var indent = /^ */.exec(line)[0];
+            if (mode === "py" && /:\s*(#.*)?$/.test(line)) indent += "    ";
+            if (indent) { e.preventDefault(); insert("\n" + indent); }
+          }
+        });
+
+        function setStatus(t) { status.textContent = t; }
+
+        function showPlaceholder() {
+          if (mode === "html") { frame.srcdoc = ""; }
+          else cons.innerHTML = '<span class="x-dim">Tap ▶ Run and your prints show up here.</span>';
+          setStatus("Tap Run to see it");
+        }
+
+        function setMode(m) {
+          code[mode] = ta.value;
+          mode = m;
+          tabs.forEach(function (t) { t.setAttribute("aria-selected", String(t.dataset.mode === m)); });
+          note.hidden = m !== "py";
+          frame.hidden = m !== "html";
+          cons.hidden = m !== "py";
+          ta.value = code[m];
+          badLine = 0;
+          ta.scrollTop = 0;
+          renderGutter();
+          showPlaceholder();
+        }
+        tabs.forEach(function (t) { t.addEventListener("click", function () { setMode(t.dataset.mode); }); });
+
+        // Inside the output frame, alert() falls back to an in-page popup when the browser blocks it.
+        var ALERT_SHIM =
+          "<script>(function(){var n=window.alert;window.alert=function(m){var t=Date.now();try{n.call(window,m)}catch(e){}" +
+          "if(Date.now()-t>60)return;var d=document.createElement('div');d.setAttribute('role','alertdialog');" +
+          "d.style.cssText='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:99999;font:16px -apple-system,sans-serif';" +
+          "var b=document.createElement('div');b.style.cssText='background:#fff;color:#1d1d1f;padding:20px;border-radius:16px;min-width:200px;max-width:80%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.25)';" +
+          "var p=document.createElement('p');p.style.margin='0 0 16px';p.textContent=String(m===undefined?'':m);" +
+          "var k=document.createElement('button');k.textContent='OK';k.style.cssText='font:inherit;font-weight:600;padding:10px 28px;border:0;border-radius:100px;background:#3f5fbb;color:#fff';" +
+          "k.onclick=function(){d.remove()};b.appendChild(p);b.appendChild(k);d.appendChild(b);(document.body||document.documentElement).appendChild(d);k.focus()}})();<\/script>";
+
+        function runHtml() {
+          frame.srcdoc = ALERT_SHIM + ta.value;
+          setStatus("Ran at " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+        }
+
+        function runPy() {
+          var result = MiniPython.run(ta.value);
+          cons.textContent = "";
+          if (!result.lines.length && !result.error) {
+            var dim = document.createElement("span");
+            dim.className = "x-dim";
+            dim.textContent = "(Your code ran, but nothing was printed. Try print(\"hi\"))";
+            cons.appendChild(dim);
+          } else if (result.lines.length) {
+            cons.appendChild(document.createTextNode(result.lines.join("\n")));
+          }
+          if (result.error) {
+            var err = document.createElement("span");
+            err.className = "x-err";
+            var b = document.createElement("b");
+            b.textContent = "Oops! ";
+            err.appendChild(b);
+            err.appendChild(document.createTextNode(result.error.message));
+            cons.appendChild(err);
+            badLine = result.error.line;
+            setStatus("Needs a fix");
+          } else {
+            badLine = 0;
+            setStatus(result.lines.length + (result.lines.length === 1 ? " line" : " lines") + " printed");
+          }
+          renderGutter();
+        }
+
+        document.getElementById("run").addEventListener("click", function () {
+          code[mode] = ta.value;
+          if (mode === "html") runHtml(); else runPy();
+          if (window.matchMedia("(max-width: 899px)").matches) {
+            document.getElementById("output-pane").scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        });
+        document.getElementById("clear").addEventListener("click", function () {
+          ta.value = "";
+          code[mode] = "";
+          badLine = 0;
+          renderGutter();
+          showPlaceholder();
+          ta.focus();
+        });
+        document.getElementById("example").addEventListener("click", function () {
+          var list = EXAMPLES[mode];
+          var i = exampleAt[mode] % list.length;
+          exampleAt[mode] = i + 1;
+          ta.value = code[mode] = list[i];
+          badLine = 0;
+          ta.scrollTop = 0;
+          renderGutter();
+          showPlaceholder();
+          setStatus("Example " + (i + 1) + " of " + list.length + " · tap Run");
+        });
+
+        setMode("html");
+      })();
+    </script>
+  </body>
+</html>
